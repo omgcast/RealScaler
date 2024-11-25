@@ -141,7 +141,7 @@ RealESRGAN_models_list      = [ 'RealESRGANx4', 'RealESRNetx4' ]
 
 AI_models_list         = ( SRVGGNetCompact_models_list + AI_LIST_SEPARATOR + RealESRGAN_models_list )
 AI_multithreading_list = [ "1 threads", "2 threads", "3 threads", "4 threads", "5 threads", "6 threads"]
-interpolation_list     = [ "Disabled", "Low", "Medium", "High" ]
+interpolation_list = [ "Disabled", "Ultra Low (5%)", "Very Low (10%)", "Low", "Medium", "High" ]
 gpus_list              = [ "Auto", "GPU 1", "GPU 2", "GPU 3", "GPU 4" ]
 keep_frames_list       = [ "Disabled", "Enabled" ]
 image_extension_list   = [ ".png", ".jpg", ".bmp", ".tiff" ]
@@ -2151,6 +2151,25 @@ def select_interpolation_from_menu(selected_option: str) -> None:
         case "Medium":   selected_interpolation_factor = 0.5
         case "High":     selected_interpolation_factor = 0.7
 
+def select_interpolation_from_menu(selected_option: str) -> None:
+    global selected_interpolation_factor
+
+    match selected_option:
+        case "Disabled": 
+            selected_interpolation_factor = 0
+        case "Ultra Low (5%)": 
+            selected_interpolation_factor = 0.05
+        case "Very Low (10%)": 
+            selected_interpolation_factor = 0.1
+        case "Low":      
+            selected_interpolation_factor = 0.3
+        case "Medium":   
+            selected_interpolation_factor = 0.5
+        case "High":     
+            selected_interpolation_factor = 0.7
+        case _:
+            selected_interpolation_factor = 0  # По умолчанию отключено
+
 def select_gpu_from_menu(selected_option: str) -> None:
     global selected_gpu    
     selected_gpu = selected_option
@@ -2267,6 +2286,8 @@ def open_info_AI_interpolation():
 
         " \n INTERPOLATION OPTIONS\n" +
         "  • Disabled - 100% upscaled\n" + 
+        "  • Ultra Low (5%) - 5% original / 95% upscaled\n" +
+        "  • Very Low (10%) - 10% original / 90% upscaled\n" +
         "  • Low - 30% original / 70% upscaled\n" +
         "  • Medium - 50% original / 50% upscaled\n" +
         "  • High - 70% original / 30% upscaled\n",
@@ -2275,7 +2296,6 @@ def open_info_AI_interpolation():
         "  • Can increase the quality of the final result\n" + 
         "  • Especially when using the tilling/merging function (with low VRAM)\n" +
         "  • Especially at low Input resolution % values (<50%) \n",
-
     ]
 
     MessageBox(
@@ -2285,6 +2305,7 @@ def open_info_AI_interpolation():
         default_value = None,
         option_list   = option_list
     )
+
 
 def open_info_gpu():
     option_list = [
@@ -2625,11 +2646,14 @@ def on_app_close() -> None:
     image_extension_to_save   = selected_image_extension
     video_extension_to_save   = selected_video_extension
     interpolation_to_save = {
-        0:   "Disabled",
-        0.3: "Low",
-        0.5: "Medium",
-        0.7: "High",
-    }.get(selected_interpolation_factor)
+        0:    "Disabled",
+        0.05: "Ultra Low (5%)",
+        0.1:  "Very Low (10%)",
+        0.3:  "Low",
+        0.5:  "Medium",
+        0.7:  "High",
+    }.get(selected_interpolation_factor, "Disabled")
+
 
     user_preference = {
         "default_AI_model":          AI_model_to_save,
@@ -2721,10 +2745,12 @@ if __name__ == "__main__":
 
     selected_interpolation_factor = {
         "Disabled": 0,
+        "Ultra Low (5%)": 0.05,
+        "Very Low (10%)": 0.1,
         "Low": 0.3,
         "Medium": 0.5,
         "High": 0.7,
-    }.get(default_interpolation)
+    }.get(default_interpolation, 0)
 
     selected_resize_factor.set(default_resize_factor)
     selected_VRAM_limiter.set(default_VRAM_limiter)
